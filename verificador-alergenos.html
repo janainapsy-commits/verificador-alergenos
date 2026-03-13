@@ -223,7 +223,7 @@ Se não encontrar: {"found":false,"source":"","product_full_name":"","ingredient
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          tools: [{ google_search: {} }]
+          generationConfig: { responseMimeType: "application/json" }
         })
       }
     );
@@ -231,8 +231,9 @@ Se não encontrar: {"found":false,"source":"","product_full_name":"","ingredient
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
 
-    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-    const jsonMatch = text.replace(/```json|```/g, '').match(/\{[\s\S]*\}/);
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const text = parts.map(p => p.text || '').join('');
+    const jsonMatch = text.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('Resposta inválida');
 
     const result = JSON.parse(jsonMatch[0]);
